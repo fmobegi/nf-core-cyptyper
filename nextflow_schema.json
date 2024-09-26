@@ -2,7 +2,7 @@
     "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "https://raw.githubusercontent.com/nf-core/cyptyper/master/nextflow_schema.json",
     "title": "nf-core/cyptyper pipeline parameters",
-    "description": "cyp2d6",
+    "description": "A pipeline for CYP2D6 genotyping using Oxford Nanopore amplicon sequencing data",
     "type": "object",
     "definitions": {
         "input_output_options": {
