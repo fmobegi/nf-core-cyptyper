@@ -8,7 +8,8 @@ process SAMTOOLS_FLAGSTAT {
         'biocontainers/samtools:1.21--h50ea8bc_0' }"
 
     input:
-    tuple val(meta), path(bam), path(bai)
+    tuple val(meta), path(bam)
+    val(bai)
 
     output:
     tuple val(meta), path("*.flagstat"), emit: flagstat

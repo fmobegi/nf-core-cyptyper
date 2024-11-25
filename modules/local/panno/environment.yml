@@ -1,0 +1,8 @@
+name: PAnno
+channels:
+  - lyaqing
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - panno=0.3.1

@@ -9,12 +9,13 @@ process BCFTOOLS_CONCAT {
 
     input:
     tuple val(meta), path(vcfs), path(tbi)
+    path(bed)
 
     output:
-    tuple val(meta), path("*.gz") , emit: vcf
-    tuple val(meta), path("*.tbi"), emit: tbi, optional: true
-    tuple val(meta), path("*.csi"), emit: csi, optional: true
-    path  "versions.yml"          , emit: versions
+    tuple val(meta), path("*.{vcf,vcf.gz,bcf,bcf.gz}"), emit: vcf
+    tuple val(meta), path("*.tbi"),                     emit: tbi,           optional: true
+    tuple val(meta), path("*.csi"),                     emit: csi,           optional: true
+    path  "versions.yml"          ,                     emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -22,12 +23,22 @@ process BCFTOOLS_CONCAT {
     script:
     def args = task.ext.args   ?: ''
     def prefix   = task.ext.prefix ?: "${meta.id}"
+
+    def input = (vcfs.collect().size() > 1) ? vcfs.sort{ it.name } : vcfs
+    def regions = bed ? "--regions-file $bed" : ""
+    def extension = args.contains("--output-type b") || args.contains("-Ob") ? "bcf.gz" :
+                    args.contains("--output-type u") || args.contains("-Ou") ? "bcf" :
+                    args.contains("--output-type z") || args.contains("-Oz") ? "vcf.gz" :
+                    args.contains("--output-type v") || args.contains("-Ov") ? "vcf" :
+                    "vcf.gz"
+    
     """
     bcftools concat \\
-        --output ${prefix}.vcf.gz \\
         $args \\
+        $regions \\
         --threads $task.cpus \\
-        ${vcfs}
+        --output ${prefix}.concat.${extension} \\
+        $input
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

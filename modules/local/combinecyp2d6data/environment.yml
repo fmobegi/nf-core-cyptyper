@@ -1,0 +1,10 @@
+name: r_tidyverse_env
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - r-base=4.2.2
+  - r-tidyverse=1.3.2
+  - r-readxl=1.4.1
+

@@ -10,7 +10,8 @@ process SNIFFLES {
     input:
     tuple val(meta), path(input), path(index)
     tuple val(meta2), path(fasta)
-    tuple val(meta3), path(tandem_file)
+    tuple val(meta2), path(fai)
+    // tuple val(meta3), path(tandem_file)
     val(vcf_output)
     val(snf_output)
 
@@ -28,16 +29,17 @@ process SNIFFLES {
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
     def reference = fasta ? "--reference ${fasta}" : ""
-    def tandem_repeats = tandem_file ? "--tandem-repeats ${tandem_file}" : ''
-    def vcf = vcf_output ? "--vcf ${prefix}.vcf.gz": ''
-    def snf = snf_output ? "--snf ${prefix}.snf": ''
+    // def tandem_repeats = tandem_file ? "--tandem-repeats ${tandem_file}" : ''
+    def vcf = vcf_output ? "--vcf ${prefix}.sniffles.vcf.gz": ''
+    def snf = snf_output ? "--snf ${prefix}.sniffles.snf": ''
+    // $tandem_repeats \\
 
     """
     sniffles \\
         --input $input \\
         $reference \\
         -t $task.cpus \\
-        $tandem_repeats \\
+        --phase \\
         $vcf \\
         $snf \\
         $args

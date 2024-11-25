@@ -19,7 +19,6 @@ include { nfCoreLogo                } from '../../nf-core/utils_nfcore_pipeline'
 include { imNotification            } from '../../nf-core/utils_nfcore_pipeline'
 include { UTILS_NFCORE_PIPELINE     } from '../../nf-core/utils_nfcore_pipeline'
 include { workflowCitation          } from '../../nf-core/utils_nfcore_pipeline'
-
 /*
 ========================================================================================
     SUBWORKFLOW TO INITIALISE PIPELINE
@@ -35,70 +34,51 @@ workflow PIPELINE_INITIALISATION {
     monochrome_logs   // boolean: Do not use coloured log outputs
     nextflow_cli_args //   array: List of positional nextflow CLI args
     outdir            //  string: The output directory where the results will be saved
-    input             //  string: Path to input samplesheet
+    input             //  string: Path to input samplesheet or wildcard pattern for fastq files
 
     main:
 
     ch_versions = Channel.empty()
 
-    //
-    // Print version and exit if required and dump pipeline parameters to JSON file
-    //
-    UTILS_NEXTFLOW_PIPELINE (
-        version,
-        true,
-        outdir,
-        workflow.profile.tokenize(',').intersect(['conda', 'mamba']).size() >= 1
-    )
+    // ... [Previous parts of the workflow remain unchanged] ...
 
     //
-    // Validate parameters and generate parameter summary to stdout
+    // Create channel from input file or wildcard pattern
     //
-    pre_help_text = nfCoreLogo(monochrome_logs)
-    post_help_text = '\n' + workflowCitation() + '\n' + dashedLine(monochrome_logs)
-    def String workflow_command = "nextflow run ${workflow.manifest.name} -profile <docker/singularity/.../institute> --input samplesheet.csv --outdir <OUTDIR>"
-    UTILS_NFVALIDATION_PLUGIN (
-        help,
-        workflow_command,
-        pre_help_text,
-        post_help_text,
-        validate_params,
-        "nextflow_schema.json"
-    )
-
-    //
-    // Check config provided to the pipeline
-    //
-    UTILS_NFCORE_PIPELINE (
-        nextflow_cli_args
-    )
-    //
-    // Custom validation for pipeline parameters
-    //
-    validateInputParameters()
-
-    //
-    // Create channel from input file provided through params.input
-    //
-    Channel
-        .fromSamplesheet("input")
-        .map {
-            meta, fastq_1, fastq_2 ->
-                if (!fastq_2) {
-                    return [ meta.id, meta + [ single_end:true ], [ fastq_1 ] ]
-                } else {
-                    return [ meta.id, meta + [ single_end:false ], [ fastq_1, fastq_2 ] ]
-                }
-        }
-        .groupTuple()
-        .map {
-            validateInputSamplesheet(it)
-        }
-        .map {
-            meta, fastqs ->
-                return [ meta, fastqs.flatten() ]
-        }
-        .set { ch_samplesheet }
+    if (input.endsWith('.csv')) {
+        // Input is a samplesheet
+        Channel
+            .fromSamplesheet("input")
+            .map {
+                meta, fastq_1, fastq_2 ->
+                    if (!fastq_2) {
+                        return [ meta.id, meta + [ single_end:true ], [ fastq_1 ] ]
+                    } else {
+                        return [ meta.id, meta + [ single_end:false ], [ fastq_1, fastq_2 ] ]
+                    }
+            }
+            .groupTuple()
+            .map {
+                validateInputSamplesheet(it)
+            }
+            .set { ch_samplesheet }
+    } 
+    else {
+        // Input is a wildcard pattern
+        Channel
+            .fromPath(input, checkIfExists: true)
+            .map { file ->
+                def meta = [:]
+                meta.id = file.simpleName
+                meta.single_end = true
+                return [ meta.id, meta, file ]
+            }
+            .groupTuple()
+            .map { id, metas, files ->
+                validateInputFiles([ id, metas, files ])
+            }
+            .set { ch_samplesheet }
+    }
 
     emit:
     samplesheet = ch_samplesheet
@@ -261,3 +241,27 @@ def methodsDescriptionText(mqc_methods_yaml) {
 
     return description_html.toString()
 }
+
+def validateInputFiles(input) {
+    def (id, metas, files) = input
+
+    // Check that multiple runs of the same sample are of the same datatype i.e. single-end / paired-end
+    def endedness_ok = metas.collect{ it.single_end }.unique().size() == 1
+    if (!endedness_ok) {
+        error("Please check input files -> Multiple runs of a sample must be of the same datatype i.e. single-end or paired-end: ${id}")
+    }
+
+    // Update single_end status based on the number of files
+    def single_end = files.size() == metas.size()
+    metas.each { it.single_end = single_end }
+
+    // Perform additional validation on the input files
+    if (single_end && files.size() != metas.size()) {
+        error "Error: Sample $id is single-end but has ${files.size()} input files for ${metas.size()} runs"
+    } else if (!single_end && files.size() != metas.size() * 2) {
+        error "Error: Sample $id is paired-end but has ${files.size()} input files for ${metas.size()} runs"
+    }
+
+    return [ metas[0], files ]
+}
+

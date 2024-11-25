@@ -26,12 +26,12 @@ process BCFTOOLS_SORT {
                     args.contains("--output-type u") || args.contains("-Ou") ? "bcf" :
                     args.contains("--output-type z") || args.contains("-Oz") ? "vcf.gz" :
                     args.contains("--output-type v") || args.contains("-Ov") ? "vcf" :
-                    "vcf"
+                    "vcf.gz"
 
     """
     bcftools \\
         sort \\
-        --output ${prefix}.${extension} \\
+        --output ${prefix}.sort.${extension} \\
         --temp-dir . \\
         $args \\
         $vcf

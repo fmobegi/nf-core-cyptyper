@@ -1,6 +1,6 @@
 process GATK4_HAPLOTYPECALLER {
     tag "$meta.id"
-    label 'process_medium'
+    label 'process_high'
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
@@ -8,18 +8,21 @@ process GATK4_HAPLOTYPECALLER {
         'biocontainers/gatk4:4.5.0.0--py36hdfd78af_0' }"
 
     input:
-    tuple val(meta),  path(input), path(input_index), path(intervals), path(dragstr_model)
+    tuple val(meta),  path(input)
+    tuple val(meta),  path(input_index)
+    path(intervals)
+    tuple val(meta1), path(dragstr_model)
     tuple val(meta2), path(fasta)
-    tuple val(meta3), path(fai)
-    tuple val(meta4), path(dict)
-    tuple val(meta5), path(dbsnp)
-    tuple val(meta6), path(dbsnp_tbi)
+    tuple val(meta2), path(fai)
+    tuple val(meta2), path(dict)
+    path(dbsnp)
+    path(dbsnp_tbi)
 
     output:
-    tuple val(meta), path("*.vcf.gz")       , emit: vcf
-    tuple val(meta), path("*.tbi")          , optional:true, emit: tbi
-    tuple val(meta), path("*.realigned.bam"), optional:true, emit: bam
-    path "versions.yml"                     , emit: versions
+    tuple val(meta), path("*.vcf.gz"),          optional:true,  emit: vcf
+    tuple val(meta), path("*.tbi"),             optional:true,  emit: tbi
+    tuple val(meta), path("*.realigned.bam"),   optional:true,  emit: bam
+    path "versions.yml",                                        emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -42,7 +45,7 @@ process GATK4_HAPLOTYPECALLER {
     gatk --java-options "-Xmx${avail_mem}M -XX:-UsePerfData" \\
         HaplotypeCaller \\
         --input $input \\
-        --output ${prefix}.vcf.gz \\
+        --output ${prefix}_gatk4.vcf.gz \\
         --reference $fasta \\
         --native-pair-hmm-threads ${task.cpus} \\
         $dbsnp_command \\
@@ -65,8 +68,8 @@ process GATK4_HAPLOTYPECALLER {
 
     def stub_realigned_bam = bamout_command ? "touch ${prefix.replaceAll('.g\\s*$', '')}.realigned.bam" : ""
     """
-    touch ${prefix}.vcf.gz
-    touch ${prefix}.vcf.gz.tbi
+    touch ${prefix}_gatk4.vcf.gz
+    touch ${prefix}_gatk4.vcf.gz.tbi
     ${stub_realigned_bam}
 
     cat <<-END_VERSIONS > versions.yml

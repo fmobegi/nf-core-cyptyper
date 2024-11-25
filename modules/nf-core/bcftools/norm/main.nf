@@ -8,7 +8,8 @@ process BCFTOOLS_NORM {
         'biocontainers/bcftools:1.20--h8b25389_0' }"
 
     input:
-    tuple val(meta), path(vcf), path(tbi)
+    tuple val(meta), path(vcf)
+    tuple val(meta), path(tbi)
     tuple val(meta2), path(fasta)
 
     output:
@@ -32,7 +33,7 @@ process BCFTOOLS_NORM {
     """
     bcftools norm \\
         --fasta-ref ${fasta} \\
-        --output ${prefix}.${extension} \\
+        --output ${prefix}.norm.${extension} \\
         $args \\
         --threads $task.cpus \\
         ${vcf}

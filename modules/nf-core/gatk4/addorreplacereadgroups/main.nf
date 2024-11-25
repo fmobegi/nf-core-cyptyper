@@ -13,7 +13,7 @@ process GATK4_ADDORREPLACEREADGROUPS {
     tuple val(meta3), path(fasta_index)
 
     output:
-    tuple val(meta), path("*.bam") , emit: bam,  optional: true
+    tuple val(meta), path("*RG.bam") , emit: bam,  optional: true
     tuple val(meta), path("*.bai") , emit: bai,  optional: true
     tuple val(meta), path("*.cram"), emit: cram, optional: true
     path "versions.yml"            , emit: versions
@@ -24,7 +24,8 @@ process GATK4_ADDORREPLACEREADGROUPS {
     script:
     def args = task.ext.args        ?: ''
     def prefix = task.ext.prefix    ?: "${meta.id}"
-    def suffix = task.ext.suffix    ?: "${bam.getExtension()}"
+    // def suffix = task.ext.suffix    ?: "${bam.getExtension()}"
+    def suffix = task.ext.suffix    ?: "RG.bam"
     def reference = fasta ? "--REFERENCE_SEQUENCE ${fasta}" : ""
     def create_index = ( suffix == "bam" )? "--CREATE_INDEX" : ""
     def avail_mem = 3072
