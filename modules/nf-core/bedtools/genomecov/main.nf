@@ -8,7 +8,8 @@ process BEDTOOLS_GENOMECOV {
         'community.wave.seqera.io/library/bedtools_coreutils:a623c13f66d5262b' }"
 
     input:
-    tuple val(meta), path(intervals), val(scale)
+    tuple val(meta), path(intervals)
+    val(scale)
     path  sizes
     val   extension
     val   sort

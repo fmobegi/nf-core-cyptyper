@@ -21,13 +21,13 @@ process BCFTOOLS_FILTER {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta.id}_filt"
 
     extension = args.contains("--output-type b") || args.contains("-Ob") ? "bcf.gz" :
                     args.contains("--output-type u") || args.contains("-Ou") ? "bcf" :
                     args.contains("--output-type z") || args.contains("-Oz") ? "vcf.gz" :
                     args.contains("--output-type v") || args.contains("-Ov") ? "vcf" :
-                    "vcf"
+                    "vcf.gz"
 
     if ("$vcf" == "${prefix}.${extension}") error "Input and output names are the same, set prefix in module configuration to disambiguate!"
 
@@ -62,7 +62,7 @@ process BCFTOOLS_FILTER {
     if ("$vcf" == "${prefix}.${extension}") error "Input and output names are the same, set prefix in module configuration to disambiguate!"
 
     """
-    ${create_cmd} ${prefix}.${extension}
+    ${create_cmd} ${prefix}_filtered.${extension}
     ${create_index}
 
     cat <<-END_VERSIONS > versions.yml

@@ -1,0 +1,62 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: "pypgx_runlongreadpipeline"
+description: Call star allels from vcf files for all target genes.
+keywords:
+  - pypgx
+  - Pharmacogenetics
+  - variants
+tools:
+  - "pypgx":
+      description: "A Python package for pharmacogenomics research"
+      homepage: "https://pypgx.readthedocs.io/en/latest/"
+      documentation: "https://pypgx.readthedocs.io/en/latest/"
+      tool_dev_url: "https://github.com/sbslee/pypgx"
+      doi: "10.1371/journal.pone.0272129"
+      licence: ["MIT"]
+      identifier: ""
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [id: 'test']
+    - vcf:
+        type: file
+        description: Input vcf file
+        pattern: "*.{vcf.gz}"
+    - tbi:
+        type: file
+        description: Input tbi index file
+        pattern: "*.{bai}"
+  - - meta2:
+        type: map
+        description: |
+          Groovy Map containing sample information
+          e.g. [id: 'test']
+  - - pgx_genes:
+        type: list
+        description: List of PGx genes supported by PyPGx to include in variant calling.
+  - - assembly_version:
+        type: string
+        description: Genome assembly version to use for variant calling.
+        pattern: "{GRCh37,GRCh38}"
+output:
+  - star_alleles:
+      - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [id: 'test']
+      - "*tsv":
+          type: file
+          description: tab separated file containing called star alleles
+          pattern: "*.tsv"
+  - versions:
+      - versions.yml:
+          type: file
+          description: File containing software versions
+          pattern: "versions.yml"
+authors:
+  - "@fmobegi"
+maintainers:
+  - "@fmobegi"

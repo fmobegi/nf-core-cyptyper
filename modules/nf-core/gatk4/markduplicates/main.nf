@@ -9,23 +9,23 @@ process GATK4_MARKDUPLICATES {
 
     input:
     tuple val(meta), path(bam)
-    path  fasta
-    path  fasta_fai
+    tuple val(meta1), path(fasta)
+    tuple val(meta1), path(fasta_fai)
 
     output:
-    tuple val(meta), path("*cram"),     emit: cram,  optional: true
-    tuple val(meta), path("*bam"),      emit: bam,   optional: true
-    tuple val(meta), path("*.crai"),    emit: crai,  optional: true
-    tuple val(meta), path("*.bai"),     emit: bai,   optional: true
-    tuple val(meta), path("*.metrics"), emit: metrics
-    path "versions.yml",                emit: versions
-
+    tuple val(meta), path("*cram"),        emit: cram,  optional: true
+    tuple val(meta), path("*.MD.bam"),     emit: bam,   optional: true
+    tuple val(meta), path("*.crai"),       emit: crai,  optional: true
+    tuple val(meta), path("*.MD.bam.bai"),        emit: bai,   optional: true
+    tuple val(meta), path("*.metrics"),    emit: metrics
+    path "versions.yml",                   emit: versions
+   
     when:
     task.ext.when == null || task.ext.when
 
     script:
     def args = task.ext.args ?: ''
-    prefix = task.ext.prefix ?: "${meta.id}.bam"
+    prefix = task.ext.prefix ?: "${meta.id}.MD.bam"
 
     // If the extension is CRAM, then change it to BAM
     prefix_bam = prefix.tokenize('.')[-1] == 'cram' ? "${prefix.substring(0, prefix.lastIndexOf('.'))}.bam" : prefix
@@ -51,6 +51,8 @@ process GATK4_MARKDUPLICATES {
         --TMP_DIR . \\
         ${reference} \\
         $args
+
+    samtools index ${prefix}
 
     # If cram files are wished as output, the run samtools for conversion
     if [[ ${prefix} == *.cram ]]; then
