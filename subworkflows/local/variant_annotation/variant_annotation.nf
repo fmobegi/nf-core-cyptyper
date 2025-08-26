@@ -101,8 +101,8 @@ workflow VARIANT_ANNOTATION {
 process COMBINE_PANNO_RESULTS {
     conda "${projectDir}/envs/py_combine.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-9adca5a7d3b5e9a729347abbdddc6ec6c3dc6f89:1679e915ddb9d6b4abda91f0f7a5a94e3477fc85-0' :
-        'biocontainers/mulled-v2-9adca5a7d3b5e9a729347abbdddc6ec6c3dc6f89:1679e915ddb9d6b4abda91f0f7a5a94e3477fc85-0' }"
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/95/95ad3cea7cbaeab6e0e8bc1b3556dc8772adaafe73b802e2ded8883a21658c53/data' :
+        'community.wave.seqera.io/library/openpyxl_pandas:a7e2c36678fbb02a' }"
 
     publishDir "${params.outdir}", mode: 'copy'
 
@@ -123,11 +123,10 @@ process COMBINE_PANNO_RESULTS {
 process COMBINE_PYPGX_RESULTS {
     conda "${projectDir}/envs/py_combine.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/mulled-v2-9adca5a7d3b5e9a729347abbdddc6ec6c3dc6f89:1679e915ddb9d6b4abda91f0f7a5a94e3477fc85-0' :
-        'biocontainers/mulled-v2-9adca5a7d3b5e9a729347abbdddc6ec6c3dc6f89:1679e915ddb9d6b4abda91f0f7a5a94e3477fc85-0' }"
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/95/95ad3cea7cbaeab6e0e8bc1b3556dc8772adaafe73b802e2ded8883a21658c53/data' :
+        'community.wave.seqera.io/library/openpyxl_pandas:a7e2c36678fbb02a' }"
 
     publishDir "${params.outdir}", mode: 'copy'
-
 
     input:
     path tsv_files

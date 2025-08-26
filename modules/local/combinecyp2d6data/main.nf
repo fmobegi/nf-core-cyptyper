@@ -3,8 +3,8 @@ process COMBINE_CYP2D6_DATA {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/r-tidyverse:1.3.2':
-        'biocontainers/r-tidyverse:1.3.2' }"
+        'oras://community.wave.seqera.io/library/r-base_r-readxl_r-tidyverse:71c385e0b1be291e':
+        'community.wave.seqera.io/library/r-base_r-readxl_r-tidyverse:bbb57ca864228160' }"
 
     input:
     path pypgx_results
