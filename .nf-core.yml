@@ -1,2 +1,12 @@
+nf_core_version: 3.3.2
 repository_type: pipeline
-nf_core_version: "2.14.1"
+template:
+  author: Fredrick Mobegi
+  description: A pipeline for CYP2D6 genotyping using Oxford Nanopore amplicon sequencing
+    data
+  force: false
+  is_nfcore: true
+  name: cyptyper
+  org: nf-core
+  outdir: .
+  version: 1.0dev
