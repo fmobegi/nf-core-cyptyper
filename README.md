@@ -22,47 +22,131 @@
 
 **nf-core/cyptyper** is a bioinformatics pipeline that ...
 
-<!-- TODO nf-core:
-   Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
-   major pipeline sections and the types of output it produces. You're giving an overview to someone new
-   to nf-core here, in 15-20 seconds. For an example, see https://github.com/nf-core/rnaseq/blob/master/README.md#introduction
--->
+## Default Workflow Steps
 
-<!-- TODO nf-core: Include a figure that guides the user through the major workflow steps. Many nf-core
-     workflows use the "tube map" design for that. See https://nf-co.re/docs/guidelines/graphic_design/workflow_diagrams#examples for examples.   -->
-<!-- TODO nf-core: Fill in short bullet-pointed list of the default steps in the pipeline -->1. Read QC ([`FastQC`](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/))2. Present QC for raw reads ([`MultiQC`](http://multiqc.info/))
+The CYPTYPER pipeline is composed of the following core stages:
+
+1. **FASTQC** – Quality control of raw FASTQ files  
+2. **PREPARE_REFERENCE_INDEXES** – Generation of reference indexes and supporting files  
+3. **FASTQ_ALIGN_BWA** – Alignment of reads to the reference genome using BWA  
+4. **BAM_STATS_BEDTOOLS_DEPTH** – Calculation of BAM statistics and depth metrics  
+5. **VARIANT_CALLING** – Detection of genomic variants using Clair3, Longshot, and GATK4  
+6. **VARIANT_ANNOTATION** – Annotation of variants using PyPGx and PANNO  
+7. **MULTIQC** – Aggregation of results and generation of a final summary report
+
+---
+
+### 1. 🔬 FASTQC
+Performs quality control checks on raw sequencing reads using [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/).  
+GitHub: [https://github.com/s-andrews/FastQC](https://github.com/s-andrews/FastQC)
+
+### 2. 🧬 PREPARE_REFERENCE_INDEXES
+Generates all necessary reference files required for downstream analysis:
+- BWA index using [BWA](http://bio-bwa.sourceforge.net/)
+- Sequence dictionary via [GATK](https://gatk.broadinstitute.org/)
+- FASTA index using [Samtools](http://www.htslib.org/)
+- STR table for DragSTR modeling ([DragSTR GitHub](https://github.com/Illumina/DragSTR))
+- Clair3 model download ([Clair3 GitHub](https://github.com/HKU-BAL/Clair3))
+- PyPGx bundle download ([PyPGx GitHub](https://github.com/PGxCenter/pypgx))
+- dbSNP indexing with [Tabix](http://www.htslib.org/doc/tabix.html)
+
+### 3. 🧬 FASTQ_ALIGN_BWA
+Aligns sequencing reads to the reference genome using [BWA-MEM](http://bio-bwa.sourceforge.net/). Post-alignment processing includes:
+- `samtools sort`: Sorts BAM files by coordinate
+- `samtools index`: Indexes BAM files for random access
+- `samtools stats`: Generates detailed alignment statistics
+- `samtools flagstat`: Summarizes alignment flags (e.g., mapped/unmapped reads)
+- `samtools idxstats`: Reports per-reference mapping statistics
+
+### 4. 📊 BAM_STATS_BEDTOOLS_DEPTH
+Calculates coverage and depth metrics across target regions using:
+- `bedtools genomecov`: Computes genome-wide coverage statistics ([BEDTools](https://bedtools.readthedocs.io/))
+- `samtools depth`: Computes per-base read depth
+- `samtools average_depth`: Calculates average depth across specified regions
+
+### 5. 🧬 VARIANT_CALLING
+Identifies genomic variants using a combination of tools:
+- [Clair3](https://github.com/HKU-BAL/Clair3): Deep-learning-based variant caller optimized for long-read sequencing
+- [Longshot](https://github.com/pjedge/longshot): Accurate variant caller for long-read data
+- [GATK4](https://gatk.broadinstitute.org/): Industry-standard toolkit for variant discovery and genotyping, using the following modules:
+  - `AddOrReplaceReadGroups`
+  - `MarkDuplicates`
+  - `CalibrateDragstrModel`
+  - `HaplotypeCaller`
+- [BCFtools](https://github.com/samtools/bcftools): Suite of tools for manipulating VCF/BCF files:
+  - `concat`: Concatenates multiple VCF files
+  - `norm`: Normalizes variant representations
+  - `sort`: Sorts VCF records
+  - `annotate`: Adds annotations to VCF entries
+  - `filter`: Applies filtering criteria to variants
+- Custom VCF header generation for compatibility with downstream annotation tools
+
+### 6. 🧬 VARIANT_ANNOTATION
+Annotates detected variants using:
+- [PANNO](https://github.com/PGxCenter/panno): Pharmacogenomic annotation tool
+- PyPGx pipelines for long-read and NGS data ([PyPGx GitHub](https://github.com/PGxCenter/pypgx))
+- Merging of annotation results and CYP2D6-specific data
+
+### 7. 📊 MULTIQC
+Compiles all quality control metrics, software versions, parameter summaries, and method descriptions into a final interactive report using [MultiQC](https://multiqc.info/)  
+GitHub: [https://github.com/ewels/MultiQC](https://github.com/ewels/MultiQC)
+
+> [!Note] 
+> Each of the above steps is executed by default. PANNO and PyPGx annotations may be skipped if input VCFs do not meet the required thresholds for genotyping.
 
 ## Usage
 
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow. Make sure to [test your setup](https://nf-co.re/docs/usage/introduction#how-to-run-a-pipeline) with `-profile test` before running the workflow on actual data.
 
-<!-- TODO nf-core: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.
-     Explain what rows and columns represent. For instance (please edit as appropriate):
+## Preparing Input Data
 
-First, prepare a samplesheet with your input data that looks as follows:
+This pipeline is built and tested using Oxford Nanopore Technologies (ONT) data, which typically consists of **single-end** FASTQ files. However, it is compatible with other sequencing platforms, including those that produce **paired-end** reads (e.g., Illumina).
+
+To run the pipeline, you must first prepare a samplesheet that specifies your input data. The format of the samplesheet depends on whether your data is single-end or paired-end.
+
+### 🧬 Single-End Example (ONT)
+
+`samplesheet.csv`:
+
+```csv
+sample,fastq_1
+ONT_SAMPLE_01,ONT_SAMPLE_01.fastq.gz
+ONT_SAMPLE_02,ONT_SAMPLE_02.fastq.gz
+```
+
+Each row represents a single-end FASTQ file. The `fastq_1` column is required; `fastq_2` should be omitted.
+
+### 🧬 Paired-End Example (Illumina or others)
 
 `samplesheet.csv`:
 
 ```csv
 sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+ILLUMINA_SAMPLE_01,SAMPLE_01_R1.fastq.gz,SAMPLE_01_R2.fastq.gz
+ILLUMINA_SAMPLE_02,SAMPLE_02_R1.fastq.gz,SAMPLE_02_R2.fastq.gz
 ```
 
-Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
+Each row represents a pair of FASTQ files corresponding to forward (`fastq_1`) and reverse (`fastq_2`) reads.
 
--->
+> ⚙️ **Note:** Mapping behavior (e.g., aligner parameters) may vary depending on the sequencing platform. You should modify the pipeline configuration (`nextflow.config`) or provide a custom config file to specify platform-specific options such as:
+> - `bwa mem` flags for ONT vs Illumina
+> - Read length thresholds
+> - Quality trimming settings
+> - Platform-specific variant calling filters
 
-Now, you can run the pipeline using:
+For more details on customizing configuration profiles, see the [nf-core documentation](https://nf-co.re/docs/usage/configuration).
 
-<!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
+Once your samplesheet is ready, run the pipeline using:
 
 ```bash
 nextflow run nf-core/cyptyper \
-   -profile <docker/singularity/.../institute> \
+   -profile <docker/singularity/conda/.../institute> \
    --input samplesheet.csv \
    --outdir <OUTDIR>
 ```
+
+> 🧠 Tip: This pipeline is heavily tested on `conda` even though other profiles are supported.
 
 > [!WARNING]
 > Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_; see [docs](https://nf-co.re/docs/usage/getting_started/configuration#custom-configuration-files).
@@ -77,9 +161,16 @@ For more details about the output files and reports, please refer to the
 
 ## Credits
 
-nf-core/cyptyper was originally written by Fredrick Mobegi.
+nf-core/cyptyper was originally written by [Fredrick Mobegi](https://github.com/fmobegi) at the Department of Clinical Immunology, [PathWest Laboratory Medicine WA](https://pathwest.health.wa.gov.au/).
 
-We thank the following people for their extensive assistance in the development of this pipeline:
+Maintenance and future developements will be led by Fredrick Mobegi.
+
+<p float="center">
+  <img src = "docs/images/pathwest_logo.png", width="400", height="90"/>
+  <img src = "docs/images/uwa_logo.png", width="400", height="90">
+</p>
+
+<!-- TODO We thank the following people for their extensive assistance in the development of this pipeline:
 
 <!-- TODO nf-core: If applicable, make list of people who have also contributed -->
 
