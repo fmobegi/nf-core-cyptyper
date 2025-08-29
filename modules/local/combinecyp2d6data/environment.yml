@@ -8,3 +8,4 @@ dependencies:
   - r-tidyverse
   - r-readxl
   - r-openxlsx
+  - r-optparse
