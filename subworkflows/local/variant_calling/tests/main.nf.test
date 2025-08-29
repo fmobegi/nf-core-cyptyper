@@ -1,0 +1,96 @@
+// TODO nf-core: Once you have added the required tests, please run the following command to build this file:
+// nf-core subworkflows test variant_calling
+nextflow_workflow {
+
+    name "Test Subworkflow VARIANT_CALLING"
+    script "../main.nf"
+    workflow "VARIANT_CALLING"
+
+    tag "subworkflows"
+    tag "subworkflows_nfcore"
+    tag "subworkflows/variant_calling"
+    tag "bcftools"
+    tag "bcftools/annotate"
+    tag "bcftools/concat"
+    tag "bcftools/filter"
+    tag "bcftools/norm"
+    tag "bcftools/sort"
+    tag "clair3"
+    tag "cleanvcfheader"
+    tag "gatk4"
+    tag "gatk4/addorreplacereadgroups"
+    tag "gatk4/calibratedragstrmodel"
+    tag "gatk4/haplotypecaller"
+    tag "gatk4/markduplicates"
+    tag "longshot"
+    tag "pypgx"
+    tag "pypgx/createinputvcf"
+    tag "tabix"
+    tag "tabix/bgziptabix"
+
+
+    test("sarscov2 - bam - variant_calling") {
+
+        when {
+            workflow {
+                """
+                // Define test inputs for variant calling subworkflow
+                ch_bam_bai = [
+                    [ id:'test', single_end:false ],
+                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/sarscov2/illumina/bam/test.paired_end.sorted.bam.bai', checkIfExists: true)
+                ]
+                fasta = [
+                    [ id:'genome' ],
+                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)
+                ]
+                fasta_fai = [
+                    [ id:'genome' ],
+                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta.fai', checkIfExists: true)
+                ]
+                genome_dict = [
+                    [ id:'genome' ],
+                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.dict', checkIfExists: true)
+                ]
+                dbsnp = [
+                    [ id:'dbsnp' ],
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/vcf/dbsnp_146.hg38.vcf.gz', checkIfExists: true)
+                ]
+                dbsnp_tbi = [
+                    [ id:'dbsnp' ],
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/vcf/dbsnp_146.hg38.vcf.gz.tbi', checkIfExists: true)
+                ]
+                bed = file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/bed/test.bed', checkIfExists: true)
+                str_table = file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/genome.str_table.zip', checkIfExists: true)
+                clair3_model_dir = file('https://github.com/nf-core/test-datasets/raw/modules/data/delete_me/clair3_models/', checkIfExists: false)
+                vcf_header = "##fileformat=VCFv4.2"
+
+                input[0] = ch_bam_bai
+                input[1] = fasta
+                input[2] = fasta_fai
+                input[3] = genome_dict
+                input[4] = dbsnp
+                input[5] = dbsnp_tbi
+                input[6] = bed
+                input[7] = str_table
+                input[8] = clair3_model_dir
+                input[9] = vcf_header
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success},
+                { assert snapshot(
+                    workflow.out.clair3_vcf,
+                    workflow.out.clair3_tbi,
+                    workflow.out.longshot_vcf,
+                    workflow.out.pypgx_vcf,
+                    workflow.out.pypgx_tbi,
+                    workflow.out.versions
+                ).match()}
+            )
+        }
+    }
+}

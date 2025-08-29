@@ -2,20 +2,17 @@ process PANNO {
     tag "$meta.id"
     label 'process_medium'
 
-    conda "${moduleDir}/environment.yml"
+    conda "/data/conda-envs/PAnno"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'oras://community.wave.seqera.io/library/pip_panno:50ff0f96618804eb':
+        'oras://community.wave.seqera.io/library/pip_panno:50ff0f96618804eb' :
         'biocontainers/panno' }"
-
-    errorStrategy 'ignore'
 
     input:
     tuple val(meta), path(vcf), path(tbi)
-    val(population)
 
     output:
-    tuple val(meta), path("*.html"), emit: html, optional:true
-    path "versions.yml"           , emit: versions
+    tuple val(meta), path("*.html"), emit: html, optional: true
+    path "versions.yml", emit: versions
 
     when:
     task.ext.when == null || task.ext.when
@@ -23,6 +20,11 @@ process PANNO {
     script:
     def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+
+    def population_arg_match = args.find(/--population\s+['"]?(\w+)['"]?/)
+    def population_code = population_arg_match ?
+        population_arg_match.replaceAll(/--population\s+['"]?(\w+)['"]?/, '$1') : 'Unknown'
+
     def population_map = [
         'OCE': 'Oceania',
         'AAC': 'AfricanAmerican',
@@ -34,15 +36,16 @@ process PANNO {
         'SAS': 'SouthASIA',
         'SSA': 'SubSaharanAfrica'
     ]
-    def population_name = population_map.get(population, 'Unknown')
+    def population_name = population_map.get(population_code, 'Unknown')
 
     """
-    panno -s ${prefix}_population_${population_name} \\
+    panno \\
+        $args \\
         -i <(zcat $vcf) \\
-        -p $population \\
-        -o .
-        
-    
+        -o ./$prefix
+
+    cp ./$prefix/${prefix}.PAnno.html ./${prefix}_population_${population_name}.html
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         panno: \$(panno --version)
@@ -50,7 +53,12 @@ process PANNO {
     """
 
     stub:
+    def args = task.ext.args ?: ''
     def prefix = task.ext.prefix ?: "${meta.id}"
+
+    def population_arg_match = args.find(/--population\s+(\S+)/)
+    def population_code = population_arg_match ? population_arg_match.replaceAll(/--population\s+/, '') : 'Unknown'
+
     def population_map = [
         'OCE': 'Oceania',
         'AAC': 'AfricanAmerican',
@@ -62,14 +70,14 @@ process PANNO {
         'SAS': 'SouthASIA',
         'SSA': 'SubSaharanAfrica'
     ]
-    def population_name = population_map.get(population, 'Unknown')
+    def population_name = population_map.get(population_code, 'Unknown')
 
     """
     touch ${prefix}_population_${population_name}.html
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
-        panno: \$(panno --version)
+        panno: stub
     END_VERSIONS
     """
 }

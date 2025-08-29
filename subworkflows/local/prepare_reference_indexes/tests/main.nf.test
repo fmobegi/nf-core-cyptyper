@@ -1,0 +1,60 @@
+// TODO nf-core: Once you have added the required tests, please run the following command to build this file:
+// nf-core subworkflows test prepare_reference_indexes
+nextflow_workflow {
+
+    name "Test Subworkflow PREPARE_REFERENCE_INDEXES"
+    script "../main.nf"
+    workflow "PREPARE_REFERENCE_INDEXES"
+
+    tag "subworkflows"
+    tag "subworkflows_"
+    tag "subworkflows/prepare_reference_indexes"
+    tag "bwa"
+    tag "bwa/index"
+    tag "gatk4"
+    tag "gatk4/composestrtablefile"
+    tag "gatk4/createsequencedictionary"
+    tag "samtools"
+    tag "samtools/faidx"
+    tag "samtools/index"
+    tag "tabix"
+    tag "tabix/tabix"
+
+
+    test("sarscov2 - reference preparation") {
+
+        when {
+            workflow {
+                """
+                // Define inputs for PREPARE_REFERENCE_INDEXES workflow
+                input[0] = [
+                    [ id:'sarscov2' ], // meta map
+                    file(params.modules_testdata_base_path + 'genomics/sarscov2/genome/genome.fasta', checkIfExists: true)
+                ]
+                input[1] = [
+                    [ id:'dbsnp' ],
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/genome/vcf/dbsnp_146.hg38.vcf.gz', checkIfExists: true)
+                ]
+                input[2] = "https://cdn.oxfordnanoportal.com/software/analysis/models/clair3_models/r941_prom_hac_g360+g422.tar.gz"
+                input[3] = "v1.4.0"
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success},
+                { assert snapshot(
+                    workflow.out.bwa,
+                    workflow.out.dbsnp_tbi,
+                    workflow.out.dict,
+                    workflow.out.str_table,
+                    workflow.out.fasta_fai,
+                    workflow.out.clair3_model_dir,
+                    workflow.out.pypgx_bundle,
+                    workflow.out.versions
+                ).match()}
+            )
+        }
+    }
+}

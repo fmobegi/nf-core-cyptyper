@@ -1,6 +1,0 @@
-channels:
-  - conda-forge
-  - bioconda
-dependencies:
-  - bioconda::cutesv=2.0.2
-  - bioconda::tabix=1.11

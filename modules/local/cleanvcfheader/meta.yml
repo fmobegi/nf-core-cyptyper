@@ -1,0 +1,48 @@
+name: "clean_vcf_header"
+description: "Cleans VCF headers by removing .bam extensions from sample names"
+keywords:
+  - vcf
+  - header
+  - clean
+  - sample names
+tools:
+  - "htslib":
+      description: "A C library for reading/writing high-throughput sequencing data"
+      homepage: "https://www.htslib.org/"
+      documentation: "http://www.htslib.org/doc/htslib.html"
+      tool_dev_url: "https://github.com/samtools/htslib"
+      doi: "10.1093/bioinformatics/btr509"
+      licence: "MIT"
+
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy Map containing sample information
+        e.g. [ id:'test', single_end:false ]
+  - vcf:
+      type: file
+      description: Input VCF file (can be compressed or uncompressed)
+      pattern: "*.{vcf,vcf.gz}"
+
+output:
+  - meta:
+      type: map
+      description: |
+        Groovy Map containing sample information
+        e.g. [ id:'test', single_end:false ]
+  - versions:
+      type: file
+      description: File containing software versions
+      pattern: "versions.yml"
+  - vcf:
+      type: file
+      description: Cleaned and compressed VCF file
+      pattern: "*.clean.vcf.gz"
+  - tbi:
+      type: file
+      description: Tabix index for the cleaned VCF file
+      pattern: "*.clean.vcf.gz.tbi"
+
+authors:
+  - "@fmobegi"

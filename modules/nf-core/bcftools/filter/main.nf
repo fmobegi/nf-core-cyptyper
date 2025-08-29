@@ -4,11 +4,11 @@ process BCFTOOLS_FILTER {
 
     conda "${moduleDir}/environment.yml"
     container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'https://depot.galaxyproject.org/singularity/bcftools:1.20--h8b25389_0':
-        'biocontainers/bcftools:1.20--h8b25389_0' }"
+        'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/5a/5acacb55c52bec97c61fd34ffa8721fce82ce823005793592e2a80bf71632cd0/data':
+        'community.wave.seqera.io/library/bcftools:1.21--4335bec1d7b44d11' }"
 
     input:
-    tuple val(meta), path(vcf)
+    tuple val(meta), path(vcf), path(tbi)
 
     output:
     tuple val(meta), path("*.${extension}"), emit: vcf
@@ -21,13 +21,13 @@ process BCFTOOLS_FILTER {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}_filt"
+    def prefix = task.ext.prefix ?: "${meta.id}"
 
     extension = args.contains("--output-type b") || args.contains("-Ob") ? "bcf.gz" :
                     args.contains("--output-type u") || args.contains("-Ou") ? "bcf" :
                     args.contains("--output-type z") || args.contains("-Oz") ? "vcf.gz" :
                     args.contains("--output-type v") || args.contains("-Ov") ? "vcf" :
-                    "vcf.gz"
+                    "vcf"
 
     if ("$vcf" == "${prefix}.${extension}") error "Input and output names are the same, set prefix in module configuration to disambiguate!"
 
@@ -62,7 +62,7 @@ process BCFTOOLS_FILTER {
     if ("$vcf" == "${prefix}.${extension}") error "Input and output names are the same, set prefix in module configuration to disambiguate!"
 
     """
-    ${create_cmd} ${prefix}_filtered.${extension}
+    ${create_cmd} ${prefix}.${extension}
     ${create_index}
 
     cat <<-END_VERSIONS > versions.yml

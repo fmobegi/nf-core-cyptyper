@@ -1,8 +1,11 @@
-name: PAnno
+name: panno_env
 channels:
   - lyaqing
-  - conda-forge
   - bioconda
+  - conda-forge
   - defaults
 dependencies:
-  - panno=0.3.1
+  - python=3.8
+  - pip
+  - pip:
+      - git+https://github.com/PreMedKB/PAnno.git

@@ -1,5 +1,5 @@
 process SAMTOOLS_DEPTH {
-    tag "$meta.id"
+    tag "$meta1.id"
     label 'process_low'
 
     conda "${moduleDir}/environment.yml"
@@ -8,12 +8,11 @@ process SAMTOOLS_DEPTH {
         'biocontainers/samtools:1.21--h50ea8bc_0' }"
 
     input:
-    tuple val(meta), path(bam)
-    path(intervals)
+    tuple val(meta1), path(bam)
+    tuple val(meta2), path(intervals)
 
     output:
-    tuple val(meta), path("*.tsv"), emit: tsv
-    tuple val(meta), path("*.average"), emit: average
+    tuple val(meta1), path("*.tsv"), emit: tsv
     path "versions.yml"           , emit: versions
 
     when:
@@ -21,9 +20,10 @@ process SAMTOOLS_DEPTH {
 
     script:
     def args = task.ext.args ?: ''
-    def prefix = task.ext.prefix ?: "${meta.id}"
+    def prefix = task.ext.prefix ?: "${meta1.id}"
     def positions = intervals ? "-b ${intervals}" : ""
     """
+    # Note: --threads value represents *additional* CPUs to allocate (total CPUs = 1 + --threads).
     samtools \\
         depth \\
         --threads ${task.cpus-1} \\
@@ -32,10 +32,16 @@ process SAMTOOLS_DEPTH {
         -o ${prefix}.tsv \\
         $bam
 
-    awk 'NR>1 {sum[\$1] += \$3; count[\$1] += \$3=="" ? 0 : 1} ; \\
-        END {for (i in sum) print i, (count[i] > 0 ? sum[i]/count[i] : "-")}' \\
-        ${prefix}.tsv | \\
-        cut -f 1,2 | sort -nrk2 >  ${prefix}.samtools.depth.average;
+    cat <<-END_VERSIONS > versions.yml
+    "${task.process}":
+        samtools: \$(echo \$(samtools --version 2>&1) | sed 's/^.*samtools //; s/Using.*\$//')
+    END_VERSIONS
+    """
+
+        stub:
+    def prefix = task.ext.prefix ?: "${meta.id}"
+    """
+    touch ${prefix}.stats
 
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":

@@ -1,0 +1,95 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: "prepare_reference_indexes"
+description: Prepares reference genome files and associated indices required for variant calling and genomic analysis
+keywords:
+  - reference
+  - genome
+  - index
+  - bwa
+  - gatk
+  - samtools
+  - variant calling
+  - pharmacogenomics
+  - clair3
+  - pypgx
+components:
+  - bwa/index
+  - gatk4/composestrtablefile
+  - gatk4/createsequencedictionary
+  - samtools/faidx
+  - samtools/index
+  - tabix/tabix
+input:
+  - fasta:
+      type: file
+      description: |
+        Reference genome FASTA file
+        Structure: [ val(meta), path(fasta) ]
+      pattern: "*.{fa,fasta}"
+  - dbsnp:
+      type: file
+      description: |
+        dbSNP VCF file for known variants (optional)
+        Structure: [ val(meta), path(vcf) ]
+      pattern: "*.vcf.gz"
+  - model_url:
+      type: string
+      description: |
+        URL for downloading Clair3 variant calling model
+  - pypgx_version:
+      type: string
+      description: |
+        Version/branch of PyPGx bundle to download
+output:
+  - bwa:
+      type: file
+      description: |
+        BWA index files for alignment
+        Structure: [ path(bwa/*) ]
+      pattern: "bwa/*"
+  - dbsnp_tbi:
+      type: file
+      description: |
+        Tabix index for dbSNP VCF file
+        Structure: [ path(tbi) ]
+      pattern: "*.vcf.gz.tbi"
+  - dict:
+      type: file
+      description: |
+        GATK sequence dictionary file
+        Structure: [ path(dict) ]
+      pattern: "*.dict"
+  - str_table:
+      type: file
+      description: |
+        GATK STR table file
+        Structure: [ path(str_table) ]
+      pattern: "*.zip"
+  - fasta_fai:
+      type: file
+      description: |
+        Samtools FASTA index file
+        Structure: [ path(fai) ]
+      pattern: "*.fai"
+  - clair3_model_dir:
+      type: directory
+      description: |
+        Clair3 variant calling model directory
+        Structure: [ path(model_dir) ]
+      pattern: "clair3_model_dir"
+  - pypgx_bundle:
+      type: directory
+      description: |
+        PyPGx bundle directory for pharmacogenomic analysis
+        Structure: [ path(pypgx_bundle) ]
+      pattern: "pypgx-bundle"
+  - versions:
+      type: file
+      description: |
+        File containing software versions
+        Structure: [ path(versions.yml) ]
+      pattern: "versions.yml"
+authors:
+  - "@fmobegi"
+maintainers:
+  - "@fmobegi"

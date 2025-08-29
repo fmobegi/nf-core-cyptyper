@@ -1,0 +1,9 @@
+name: clean_vcf_header
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - tabix=1.11
+  - gawk=5.3.1
+  - gzip=1.14

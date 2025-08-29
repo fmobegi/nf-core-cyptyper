@@ -31,41 +31,49 @@ input:
           List containing 2 or more index files (optional)
           e.g. [ 'file1.tbi', 'file2.tbi' ]
 output:
-  - vcf:
-      - meta:
+  vcf:
+    - - meta:
           type: map
           description: |
             Groovy Map containing sample information
             e.g. [ id:'test', single_end:false ]
-      - "*.gz":
-          type: file
-          description: VCF concatenated output file
-          pattern: "*.{vcf.gz}"
-  - tbi:
-      - meta:
+      - ${prefix}.${extension}:
           type: map
           description: |
             Groovy Map containing sample information
             e.g. [ id:'test', single_end:false ]
-      - "*.tbi":
-          type: file
-          description: Alternative VCF file index
+          pattern: "*.{vcf,vcf.gz,bcf,bcf.gz}"
+  tbi:
+    - - meta:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'test', single_end:false ]
+      - ${prefix}.${extension}.tbi:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'test', single_end:false ]
           pattern: "*.tbi"
-  - csi:
-      - meta:
+  csi:
+    - - meta:
           type: map
           description: |
             Groovy Map containing sample information
             e.g. [ id:'test', single_end:false ]
-      - "*.csi":
-          type: file
-          description: Default VCF file index
+      - ${prefix}.${extension}.csi:
+          type: map
+          description: |
+            Groovy Map containing sample information
+            e.g. [ id:'test', single_end:false ]
           pattern: "*.csi"
-  - versions:
-      - versions.yml:
-          type: file
-          description: File containing software versions
-          pattern: "versions.yml"
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions
+        pattern: "versions.yml"
+        ontologies:
+          - edam: http://edamontology.org/format_3750 # YAML
 authors:
   - "@abhi18av"
   - "@nvnieuwk"

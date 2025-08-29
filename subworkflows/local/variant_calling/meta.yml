@@ -1,0 +1,154 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: "variant_calling"
+description: Comprehensive variant calling using multiple tools including GATK4, Clair3, Longshot, and PyPGx. Processes BWA alignments and generates variant calls for downstream analysis and annotation.
+keywords:
+  - variant calling
+  - vcf
+  - gatk4
+  - clair3
+  - longshot
+  - pypgx
+  - haplotypecaller
+  - bcftools
+components:
+  - bcftools/annotate
+  - bcftools/concat
+  - bcftools/filter
+  - bcftools/norm
+  - bcftools/sort
+  - clair3
+  - cleanvcfheader
+  - gatk4/addorreplacereadgroups
+  - gatk4/calibratedragstrmodel
+  - gatk4/combinegvcfs
+  - gatk4/createsequencedictionary
+  - gatk4/haplotypecaller
+  - gatk4/markduplicates
+  - longshot
+  - pypgx/createinputvcf
+  - tabix/bgziptabix
+  - vcftools
+input:
+  - ch_bam_bai:
+      type: file
+      description: |
+        BWA aligned BAM files with indices
+        Structure: [ val(meta), path(bam), path(bai) ]
+      pattern: "*.{bam,bai}"
+  - fasta:
+      type: file
+      description: |
+        Reference genome FASTA file
+        Structure: [ val(meta), path(fasta) ]
+      pattern: "*.{fa,fasta}"
+  - fasta_fai:
+      type: file
+      description: |
+        FASTA index file
+        Structure: [ val(meta), path(fai) ]
+      pattern: "*.fai"
+  - genome_dict:
+      type: file
+      description: |
+        Sequence dictionary file
+        Structure: [ val(meta), path(dict) ]
+      pattern: "*.dict"
+  - dbsnp:
+      type: file
+      description: |
+        dbSNP VCF file
+        Structure: [ val(meta), path(vcf) ]
+      pattern: "*.vcf.gz"
+  - dbsnp_tbi:
+      type: file
+      description: |
+        dbSNP index file
+        Structure: [ val(meta), path(tbi) ]
+      pattern: "*.tbi"
+  - bed:
+      type: file
+      description: |
+        Target intervals BED file
+        Structure: [ path(bed) ]
+      pattern: "*.bed"
+  - str_table:
+      type: file
+      description: |
+        STR table for DragSTR model
+        Structure: [ path(zip) ]
+      pattern: "*.zip"
+  - clair3_model_dir:
+      type: directory
+      description: |
+        Clair3 model directory
+        Structure: [ path(dir) ]
+  - vcf_header:
+      type: string
+      description: |
+        VCF header template
+        Structure: [ val(header) ]
+output:
+  - pypgx_vcf:
+      type: file
+      description: |
+        PyPGx VCF file
+        Structure: [ val(meta), path(vcf) ]
+      pattern: "*.vcf.gz"
+  - pypgx_tbi:
+      type: file
+      description: |
+        PyPGx TBI index file
+        Structure: [ val(meta), path(tbi) ]
+      pattern: "*.tbi"
+  - clair3_vcf:
+      type: file
+      description: |
+        Clair3 VCF file
+        Structure: [ val(meta), path(vcf) ]
+      pattern: "*.vcf.gz"
+  - clair3_tbi:
+      type: file
+      description: |
+        Clair3 TBI index file
+        Structure: [ val(meta), path(tbi) ]
+      pattern: "*.tbi"
+  - longshot_vcf:
+      type: file
+      description: |
+        Longshot VCF file with TBI index
+        Structure: [ val(meta), path(vcf), path(tbi) ]
+      pattern: "*.{vcf.gz,tbi}"
+  - gatk4_vcf:
+      type: file
+      description: |
+        GATK4 HaplotypeCaller VCF file
+        Structure: [ val(meta), path(vcf) ]
+      pattern: "*.vcf.gz"
+  - gatk4_tbi:
+      type: file
+      description: |
+        GATK4 HaplotypeCaller TBI index file
+        Structure: [ val(meta), path(tbi) ]
+      pattern: "*.tbi"
+  - combined_vcf:
+      type: file
+      description: |
+        Final combined and filtered VCF file with annotations
+        Structure: [ val(meta), path(vcf) ]
+      pattern: "*.vcf.gz"
+  - combined_tbi:
+      type: file
+      description: |
+        Final combined and filtered TBI index file
+        Structure: [ val(meta), path(tbi) ]
+      pattern: "*.tbi"
+  - versions:
+      type: file
+      description: |
+        File containing software versions
+        Structure: [ path(versions.yml) ]
+      pattern: "versions.yml"
+authors:
+  - "@fmobegi"
+maintainers:
+  - "@fmobegi"
