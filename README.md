@@ -26,22 +26,25 @@
 
 The CYPTYPER pipeline is composed of the following core stages:
 
-1. **FASTQC** – Quality control of raw FASTQ files  
-2. **PREPARE_REFERENCE_INDEXES** – Generation of reference indexes and supporting files  
-3. **FASTQ_ALIGN_BWA** – Alignment of reads to the reference genome using BWA  
-4. **BAM_STATS_BEDTOOLS_DEPTH** – Calculation of BAM statistics and depth metrics  
-5. **VARIANT_CALLING** – Detection of genomic variants using Clair3, Longshot, and GATK4  
-6. **VARIANT_ANNOTATION** – Annotation of variants using PyPGx and PANNO  
+1. **FASTQC** – Quality control of raw FASTQ files
+2. **PREPARE_REFERENCE_INDEXES** – Generation of reference indexes and supporting files
+3. **FASTQ_ALIGN_BWA** – Alignment of reads to the reference genome using BWA
+4. **BAM_STATS_BEDTOOLS_DEPTH** – Calculation of BAM statistics and depth metrics
+5. **VARIANT_CALLING** – Detection of genomic variants using Clair3, Longshot, and GATK4
+6. **VARIANT_ANNOTATION** – Annotation of variants using PyPGx and PANNO
 7. **MULTIQC** – Aggregation of results and generation of a final summary report
 
 ---
 
 ### 1. 🔬 FASTQC
+
 Performs quality control checks on raw sequencing reads using [FastQC](https://www.bioinformatics.babraham.ac.uk/projects/fastqc/).  
 GitHub: [https://github.com/s-andrews/FastQC](https://github.com/s-andrews/FastQC)
 
 ### 2. 🧬 PREPARE_REFERENCE_INDEXES
+
 Generates all necessary reference files required for downstream analysis:
+
 - BWA index using [BWA](http://bio-bwa.sourceforge.net/)
 - Sequence dictionary via [GATK](https://gatk.broadinstitute.org/)
 - FASTA index using [Samtools](http://www.htslib.org/)
@@ -51,7 +54,9 @@ Generates all necessary reference files required for downstream analysis:
 - dbSNP indexing with [Tabix](http://www.htslib.org/doc/tabix.html)
 
 ### 3. 🧬 FASTQ_ALIGN_BWA
+
 Aligns sequencing reads to the reference genome using [BWA-MEM](http://bio-bwa.sourceforge.net/). Post-alignment processing includes:
+
 - `samtools sort`: Sorts BAM files by coordinate
 - `samtools index`: Indexes BAM files for random access
 - `samtools stats`: Generates detailed alignment statistics
@@ -59,13 +64,17 @@ Aligns sequencing reads to the reference genome using [BWA-MEM](http://bio-bwa.s
 - `samtools idxstats`: Reports per-reference mapping statistics
 
 ### 4. 📊 BAM_STATS_BEDTOOLS_DEPTH
+
 Calculates coverage and depth metrics across target regions using:
+
 - `bedtools genomecov`: Computes genome-wide coverage statistics ([BEDTools](https://bedtools.readthedocs.io/))
 - `samtools depth`: Computes per-base read depth
 - `samtools average_depth`: Calculates average depth across specified regions
 
 ### 5. 🧬 VARIANT_CALLING
+
 Identifies genomic variants using a combination of tools:
+
 - [Clair3](https://github.com/HKU-BAL/Clair3): Deep-learning-based variant caller optimized for long-read sequencing
 - [Longshot](https://github.com/pjedge/longshot): Accurate variant caller for long-read data
 - [GATK4](https://gatk.broadinstitute.org/): Industry-standard toolkit for variant discovery and genotyping, using the following modules:
@@ -82,16 +91,19 @@ Identifies genomic variants using a combination of tools:
 - Custom VCF header generation for compatibility with downstream annotation tools
 
 ### 6. 🧬 VARIANT_ANNOTATION
+
 Annotates detected variants using:
+
 - [PANNO](https://github.com/PGxCenter/panno): Pharmacogenomic annotation tool
 - PyPGx pipelines for long-read and NGS data ([PyPGx GitHub](https://github.com/PGxCenter/pypgx))
 - Merging of annotation results and CYP2D6-specific data
 
 ### 7. 📊 MULTIQC
+
 Compiles all quality control metrics, software versions, parameter summaries, and method descriptions into a final interactive report using [MultiQC](https://multiqc.info/)  
 GitHub: [https://github.com/ewels/MultiQC](https://github.com/ewels/MultiQC)
 
-> [!Note] 
+> [!Note]
 > Each of the above steps is executed by default. PANNO and PyPGx annotations may be skipped if input VCFs do not meet the required thresholds for genotyping.
 
 ## Usage
@@ -129,11 +141,14 @@ ILLUMINA_SAMPLE_02,SAMPLE_02_R1.fastq.gz,SAMPLE_02_R2.fastq.gz
 
 Each row represents a pair of FASTQ files corresponding to forward (`fastq_1`) and reverse (`fastq_2`) reads.
 
-> ⚙️ **Note:** Mapping behavior (e.g., aligner parameters) may vary depending on the sequencing platform. You should modify the pipeline configuration (`nextflow.config`) or provide a custom config file to specify platform-specific options such as:
-> - `bwa mem` flags for ONT vs Illumina
+> ⚙️ **Note:** Mapping behavior (e.g., aligner parameters) may vary depending on the sequencing platform. You should modify the alignment module configuration (`conf/modules.config`) using `ext.args` or provide a options specific to your sequencing platform, such as:
+>
+> - `bwa mem -x <ont2d/intractg/pacbio>` for Oxford Nanopore, Illumina, and PacBio, respectively.
 > - Read length thresholds
 > - Quality trimming settings
 > - Platform-specific variant calling filters
+>
+> These options can be provided in a separate config using the `-c config` option when running the pipeline.
 
 For more details on customizing configuration profiles, see the [nf-core documentation](https://nf-co.re/docs/usage/configuration).
 
