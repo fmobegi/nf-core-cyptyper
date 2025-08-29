@@ -21,7 +21,7 @@ process SAMTOOLS_AVERAGEDEPTH {
     def prefix = task.ext.prefix ?: "${meta.id}"
     """
     awk '{sum += \$3; count++} END {if (count > 0) print sum/count; else print 0}' ${depth_file} > ${prefix}.txt
-    
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         gawk: \$(awk --version | head -n1 | sed 's/^.*gawk //; s/,.*\$//')

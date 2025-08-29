@@ -37,14 +37,14 @@ workflow BAM_STATS_BEDTOOLS_DEPTH {
         true
     )
     ch_versions = ch_versions.mix(BEDTOOLS_GENOMECOV.out.versions.first())
-    
+
     /*
     MODULE: SAMTOOLS_DEPTH
     */
     // Prepare the bed file with metadata for SAMTOOLS_DEPTH
 
     def ch_bed_with_meta = ch_cyp2d6_bed.map { file -> [[id: 'intervals'], file] }
-    
+
     SAMTOOLS_DEPTH (
         ch_bam,
         ch_bed_with_meta

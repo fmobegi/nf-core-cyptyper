@@ -131,7 +131,7 @@ workflow VARIANT_CALLING {
         ch_genome_str_table
     )
     ch_versions = ch_versions.mix(GATK4_CALIBRATEDRAGSTRMODEL.out.versions.first())
-    
+
     /*
     MODULE: GATK4_HAPLOTYPECALLER || NF-CORE
     */
@@ -161,8 +161,8 @@ workflow VARIANT_CALLING {
         .join(GATK4_HAPLOTYPECALLER.out.tbi, failOnDuplicate:true, failOnMismatch:true)
         .map { meta, vcf, tbi -> [meta, vcf, tbi] }
         .set { ch_from_gatk4 }
-    
-    // Longshot VCF and TBI files 
+
+    // Longshot VCF and TBI files
     TABIX_BGZIPTABIX.out.gz_tbi.map { meta, vcf, tbi -> [meta, vcf, tbi] }
         .set { ch_from_longshot }
 
@@ -170,7 +170,7 @@ workflow VARIANT_CALLING {
         .join(CLEAN_VCF_HEADER.out.tbi, failOnDuplicate:true, failOnMismatch:true)
         .map { meta, vcf, tbi -> [meta, vcf, tbi] }
         .set { ch_from_pypgx }
-        
+
     ch_from_clair3
         .mix(
             ch_from_longshot,
@@ -211,7 +211,7 @@ workflow VARIANT_CALLING {
     PROCESS CREATE_VCF_HEADER
     */
     CREATE_VCF_HEADER ( vcf_header )
-    
+
     /*
     MODULE: BCFTOOLS_ANNOTATE
         Add dbSNP data to the VCF file.
@@ -221,8 +221,8 @@ workflow VARIANT_CALLING {
             .join( BCFTOOLS_SORT.out.tbi, failOnDuplicate:true, failOnMismatch:true )
             .combine(ch_dbsnp_vcf.map { meta, vcf -> vcf })
             .combine(ch_dbsnp_tbi.map { meta, tbi -> tbi })
-            .map { meta, vcf, tbi, dbsnp_vcf, dbsnp_tbi -> 
-                [meta, vcf, tbi, dbsnp_vcf, dbsnp_tbi] 
+            .map { meta, vcf, tbi, dbsnp_vcf, dbsnp_tbi ->
+                [meta, vcf, tbi, dbsnp_vcf, dbsnp_tbi]
             },
         CREATE_VCF_HEADER.out.header,
         []
@@ -262,4 +262,3 @@ process CREATE_VCF_HEADER {
     echo "${vcf_header}" | sed 's/^[ \t]*//' > vcf_header.txt
     """
 }
-

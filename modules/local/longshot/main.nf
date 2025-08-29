@@ -1,11 +1,11 @@
 /*
 https://github.com/pjedge/longshot
-Longshot is a variant calling tool for diploid genomes using long error prone reads such as 
-Pacific Biosciences (PacBio) SMRT and Oxford Nanopore Technologies (ONT). 
-It takes as input an aligned BAM/CRAM file and outputs a phased VCF file with variants and haplotype information. 
-It can also genotype and phase input VCF files. It can output 
-haplotype-separated BAM files that can be used for downstream analysis. 
-Currently, it only calls single nucleotide variants (SNVs), 
+Longshot is a variant calling tool for diploid genomes using long error prone reads such as
+Pacific Biosciences (PacBio) SMRT and Oxford Nanopore Technologies (ONT).
+It takes as input an aligned BAM/CRAM file and outputs a phased VCF file with variants and haplotype information.
+It can also genotype and phase input VCF files. It can output
+haplotype-separated BAM files that can be used for downstream analysis.
+Currently, it only calls single nucleotide variants (SNVs),
 but it can genotype indels if they are given in an input VCF.
 */
 
@@ -41,8 +41,8 @@ process LONGSHOT {
         $args \\
         --ref ${fasta} \\
         --out ${prefix}.longshot.vcf \\
-        --bam $bam    
-        
+        --bam $bam
+
     cat <<-END_VERSIONS > versions.yml
     "${task.process}":
         longphase: \$(longshot --version | awk -F " " '{print \$NF}')

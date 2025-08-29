@@ -98,7 +98,7 @@ workflow VARIANT_ANNOTATION {
 
 /*
 PROCESS: COMBINE_PANNO_RESULTS
-    processes required to summarize Panno CYP2D6 results.   
+    processes required to summarize Panno CYP2D6 results.
 */
 
 process COMBINE_PANNO_RESULTS {

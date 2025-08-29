@@ -83,7 +83,7 @@ workflow PREPARE_REFERENCE_INDEXES {
     fasta_fai            = SAMTOOLS_FAIDX.out.fai.collect()
     pypgx_bundle         = DOWNLOAD_PYPGX_BUNDLE.out.pypgx_bundle
     str_table            = GATK4_COMPOSESTRTABLEFILE.out.str_table.collect()
-    versions             = ch_versions                                                      
+    versions             = ch_versions
 }
 
 /*
