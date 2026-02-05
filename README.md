@@ -95,7 +95,7 @@ Identifies genomic variants using a combination of tools:
 Annotates detected variants using:
 
 - [PANNO](https://github.com/PreMedKB/PAnno): Pharmacogenomic annotation tool
-- PyPGx pipelines for long-read and NGS data ([PyPGx GitHub](https://github.com/PGxCenter/pypgx))
+- PyPGx pipelines for long-read and NGS data ([PyPGx](https://github.com/sbslee/pypgx))
 - Merging of annotation results and CYP2D6-specific data
 
 ### 7. 📊 MULTIQC
