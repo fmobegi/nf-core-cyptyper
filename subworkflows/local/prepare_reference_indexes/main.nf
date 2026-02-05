@@ -45,7 +45,7 @@ workflow PREPARE_REFERENCE_INDEXES {
         [ [ id:'no_fai' ], [] ],
         true
     )
-    ch_versions = ch_versions.mix(SAMTOOLS_FAIDX.out.versions)
+    // ch_versions = ch_versions.mix(SAMTOOLS_FAIDX.out.versions)
 
     /*
     MODULE: GATK4_COMPOSESTRTABLEFILE
@@ -71,12 +71,12 @@ workflow PREPARE_REFERENCE_INDEXES {
     MODULE: TABIX_TABIX
     */
     TABIX_TABIX ( ch_dbsnp )
-    ch_versions = ch_versions.mix(TABIX_TABIX.out.versions)
+    // ch_versions = ch_versions.mix(TABIX_TABIX.out.versions)
 
     emit:
     bwa_index            = BWA_INDEX.out.index.collect()                                    // path: bwa/*
     clair3_model_dir     = DOWNLOAD_CLAIR3_MODEL.out.model_dir
-    dbsnp_tbi            = TABIX_TABIX.out.tbi.collect()
+    dbsnp_tbi            = TABIX_TABIX.out.index.collect()
     dbsnp_vcf            = ch_dbsnp
     dict                 = GATK4_CREATESEQUENCEDICTIONARY.out.dict.collect()
     fasta_ref            = ch_fasta

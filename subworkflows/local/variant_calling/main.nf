@@ -163,7 +163,7 @@ workflow VARIANT_CALLING {
         .set { ch_from_gatk4 }
 
     // Longshot VCF and TBI files
-    TABIX_BGZIPTABIX.out.gz_tbi.map { meta, vcf, tbi -> [meta, vcf, tbi] }
+    TABIX_BGZIPTABIX.out.gz_index.map { meta, vcf, tbi -> [meta, vcf, tbi] }
         .set { ch_from_longshot }
 
     CLEAN_VCF_HEADER.out.vcf
@@ -216,18 +216,21 @@ workflow VARIANT_CALLING {
     MODULE: BCFTOOLS_ANNOTATE
         Add dbSNP data to the VCF file.
     */
+    ch_annotate_input = BCFTOOLS_SORT.out.vcf
+        .join(BCFTOOLS_SORT.out.tbi, failOnDuplicate: true, failOnMismatch: true)
+        .combine(ch_dbsnp_vcf.map { meta, vcf -> vcf })
+        .combine(ch_dbsnp_tbi.map { meta, tbi -> tbi })
+        .map { meta, vcf, tbi, dbsnp_vcf, dbsnp_tbi ->
+            [meta, vcf, tbi, dbsnp_vcf, dbsnp_tbi]
+        }
+
     BCFTOOLS_ANNOTATE (
-        BCFTOOLS_SORT.out.vcf
-            .join( BCFTOOLS_SORT.out.tbi, failOnDuplicate:true, failOnMismatch:true )
-            .combine(ch_dbsnp_vcf.map { meta, vcf -> vcf })
-            .combine(ch_dbsnp_tbi.map { meta, tbi -> tbi })
-            .map { meta, vcf, tbi, dbsnp_vcf, dbsnp_tbi ->
-                [meta, vcf, tbi, dbsnp_vcf, dbsnp_tbi]
-            },
+        ch_annotate_input,
+        [],
         CREATE_VCF_HEADER.out.header,
         []
     )
-    ch_versions = ch_versions.mix( BCFTOOLS_ANNOTATE.out.versions.first() )
+    ch_versions = ch_versions.mix(BCFTOOLS_ANNOTATE.out.versions.first())
 
     /*
     MODULE: BCFTOOLS_FILTER
@@ -237,11 +240,11 @@ workflow VARIANT_CALLING {
 
 
     emit:
-    clair3_vcf_tbi     = ch_from_clair3                                                    // channel: [val(meta), path(vcf), path(tbi)] - Clair3
+    clair3_vcf_tbi     = ch_from_clair3                                                     // channel: [val(meta), path(vcf), path(tbi)] - Clair3
     combined_vcf_tbi   = BCFTOOLS_FILTER.out.vcf.join(BCFTOOLS_FILTER.out.tbi)              // channel: [val(meta), path(vcf), path(tbi)] - Merged
     gatk4_vcf_tbi      = GATK4_HAPLOTYPECALLER.out.vcf.join(GATK4_HAPLOTYPECALLER.out.tbi)  // channel: [val(meta), path(vcf), path(tbi)] - GATK4
-    longshot_vcf_tbi   = TABIX_BGZIPTABIX.out.gz_tbi                                        // channel: [val(meta), path(vcf), path(tbi)] - Longshot
-    pypgx_vcf_tbi      = CLEAN_VCF_HEADER.out.vcf.join(CLEAN_VCF_HEADER.out.tbi)        // channel: [val(meta), path(vcf), path(tbi)] - PyPGx
+    longshot_vcf_tbi   = TABIX_BGZIPTABIX.out.gz_index                                        // channel: [val(meta), path(vcf), path(tbi)] - Longshot
+    pypgx_vcf_tbi      = CLEAN_VCF_HEADER.out.vcf.join(CLEAN_VCF_HEADER.out.tbi)            // channel: [val(meta), path(vcf), path(tbi)] - PyPGx
     versions           = ch_versions                                                        // channel: [path(versions.yml)]
 }
 
